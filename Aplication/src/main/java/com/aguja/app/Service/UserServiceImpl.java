@@ -1,16 +1,20 @@
 package com.aguja.app.Service;
 
+<<<<<<< HEAD
 
 import java.util.Optional;
 
 import javax.validation.Valid;
 
+=======
+>>>>>>> f2151a192d015687934e6b58b253f03df2e006d8
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.aguja.app.Entity.User;
 import com.aguja.app.Repository.UserRepository;
 
+<<<<<<< HEAD
 
 @Service
 public class UserServiceImpl implements UserService{
@@ -46,4 +50,18 @@ public class UserServiceImpl implements UserService{
 		}
 		return user;
 	}
+=======
+@Service
+public class UserServiceImpl implements UserService{
+	
+	@Autowired
+	UserRepository repository;
+
+	@Override
+	public Iterable<User> getAllUsers() {
+		// TODO Auto-generated method stub
+		return repository.findAll();
+	}
+
+>>>>>>> f2151a192d015687934e6b58b253f03df2e006d8
 }
