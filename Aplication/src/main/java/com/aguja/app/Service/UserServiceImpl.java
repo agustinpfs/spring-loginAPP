@@ -17,63 +17,72 @@ import com.aguja.app.Repository.UserRepository;
 public class UserServiceImpl implements UserService{
 
 	@Autowired
-	UserRepository repository;
+	UserRepository userRepository;
 	
-	@Override
-	public Iterable<User> getAllUsers() {
-		return repository.findAll();
+	public Iterable<User> getAllUsers(){
+		return userRepository.findAll();
 	}
-	
-	private boolean checkUsernameAvailable(User user) throws Exception {
-		Optional<User> userFound = repository.findByUsername(user.getUsername());
-		if (userFound.isPresent()) {
-			throw new Exception("Username no disponible");
-		}
-		return true;
-	}
-
-	private boolean checkPasswordValid(User user) throws Exception {
-		if (user.getConfirmPassword() == null || user.getConfirmPassword().isEmpty()) {
-			throw new Exception("Confirm Password es obligatorio");
-		}
-		
-		if ( !user.getPassword().equals(user.getConfirmPassword())) {
-			throw new Exception("Password y Confirm Password no son iguales");
-		}
-		return true;
-	}
-
 
 	@Override
-	public User createUser(User user) throws Exception {
-		if (checkUsernameAvailable(user) && checkPasswordValid(user)) {
-			user = repository.save(user);
+	public User createUser(User formUser) throws Exception {
+		if( !checkUsernameExists(formUser)
+				&& checkPasswordMatch(formUser)){
+
+			formUser.setPassword(formUser.getPassword());
+			
+			User createdUser = userRepository.save(formUser);
+			return createdUser;
 		}
-		return user;
+		return formUser;
+	}
+	
+	private boolean checkUsernameExists(User user) throws Exception{
+		Optional<User> existentUser = userRepository.findByUsername(user.getUsername());
+		if(existentUser.isPresent()) {
+			throw new Exception("Username already exists");
+		}
+		return false;
+	}
+
+	private boolean checkPasswordMatch(User user)throws Exception{
+		if( user.getPassword()!=null
+				&& !user.getPassword().equals(user.getConfirmPassword()) ){
+			
+			throw new Exception("Passwords does not match");
+		}
+		return true;
 	}
 
 	@Override
 	public User getUserById(Long id) throws Exception {
-		return repository.findById(id).orElseThrow(() -> new Exception("El usuario para editar no existe."));
-	}
-
-	@Override
-	public User updateUser(User fromUser) throws Exception {
-		User toUser = getUserById(fromUser.getId());
-		mapUser(fromUser, toUser);
-		return repository.save(toUser);
+		User user = userRepository.findById(id).orElseThrow(() -> new Exception("User does not exist"));
+		return user;
 	}
 	
-	/**
-	 * Map everythin but the password.
-	 * @param from
-	 * @param to
-	 */
+	public User updateUser(User formUser) throws Exception {
+		
+		User storedUser = userRepository.findById(formUser.getId())
+				.orElseThrow(() -> new Exception("UsernotFound in updateUser -"+this.getClass().getName()));
+		
+		mapUser(formUser,storedUser);
+		userRepository.save(storedUser);
+		return storedUser;
+	}
+	
 	protected void mapUser(User from,User to) {
 		to.setUsername(from.getUsername());
 		to.setFirstName(from.getFirstName());
 		to.setLastName(from.getLastName());
 		to.setEmail(from.getEmail());
 		to.setRoles(from.getRoles());
+		to.setPassword(from.getPassword());
+	}
+	
+	@Override
+	public void deleteUser(Long id) throws Exception {
+		User user = userRepository.findById(id)
+				.orElseThrow(() -> new Exception("UsernotFound in deleteUser -"+this.getClass().getName()));
+
+		userRepository.delete(user);
 	}
 }
